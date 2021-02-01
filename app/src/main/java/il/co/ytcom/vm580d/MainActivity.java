@@ -8,6 +8,8 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.storage.StorageManager;
+import android.os.storage.StorageVolume;
 import android.util.Log;
 import android.view.View;
 
@@ -20,10 +22,37 @@ import com.google.android.material.snackbar.Snackbar;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
     private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
+
+    public static String getExternalSDCardPath(Context context) {
+        List<StorageVolume> storageVolumes = ((StorageManager) context.getSystemService(Context.STORAGE_SERVICE)).getStorageVolumes();
+        try {
+            Class<?> cls = Class.forName("android.os.storage.StorageVolume");
+            Method declaredMethod = cls.getDeclaredMethod("getPath", new Class[0]);
+            Method declaredMethod2 = cls.getDeclaredMethod("isRemovable", new Class[0]);
+            declaredMethod.setAccessible(true);
+            declaredMethod2.setAccessible(true);
+            for (int i = 0; i < storageVolumes.size(); i++) {
+                StorageVolume storageVolume = storageVolumes.get(i);
+                String str = (String) declaredMethod.invoke(storageVolume, new Object[0]);
+                Boolean bool = (Boolean) declaredMethod2.invoke(storageVolume, new Object[0]);
+                Log.d("cary", "path is " + str + "  isRemove is " + bool);
+                if (bool.booleanValue()) {
+                    return str;
+                }
+            }
+            return "";
+        } catch (ClassNotFoundException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,7 +69,6 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-
 
 
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -66,12 +94,12 @@ public class MainActivity extends AppCompatActivity {
         File default_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
         try {
             Log.d("ddd", "onCreate: " + default_folder.getCanonicalPath());
-            Log.d("ddd", "/storage/3E90-110A/DCIM/Video/ CanRead(: " + new File("/storage/3E90-110A/DCIM/Video/").canRead() + ") CanWrite("+ new File("/storage/3E90-110A/DCIM/Video/").canWrite()+")");
+            Log.d("ddd", "getExternalSDCardPath() CanRead(: " + new File(getExternalSDCardPath(this)).canRead() + ") CanWrite("+ new File(getExternalSDCardPath(this)).canWrite()+")");
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        File yourFile = new File(new File("/storage/sdcard1/DCIM/Video/"),"20180104_204217"+"_HASH.sig");
+        File yourFile = new File(new File(getExternalSDCardPath(this) + File.separator+ "/DCIM/Video/"),"20180104_204217"+"_HASH.sig");
         try {
             yourFile.createNewFile(); // if file already exists will do nothing
         } catch (IOException e) {
