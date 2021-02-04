@@ -26,6 +26,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import static il.co.ytcom.vm580d.CryptoService.startActionEncrypt;
+
 public class MainActivity extends AppCompatActivity {
 
     private final int MY_PERMISSIONS_REQUEST_READ_EXTERNAL_STORAGE = 123;
@@ -106,6 +108,8 @@ public class MainActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
+
+        startActionEncrypt(this, Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM) + "/Video/cryptlib.lib");
 
         RunJobAndFinish();
     }

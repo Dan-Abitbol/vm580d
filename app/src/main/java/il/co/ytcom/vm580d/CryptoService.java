@@ -4,7 +4,6 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
-import android.os.Environment;
 
 import androidx.annotation.RequiresApi;
 
@@ -134,7 +133,7 @@ public class CryptoService extends IntentService {
 
         String destFile = plainText.substring(plainText.lastIndexOf(File.separator),plainText.lastIndexOf('.'));
 
-        File default_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
+//        File default_folder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 
         try {
 //            EncryptFile(secretKey, plainText, destFile + "_ENC.mp4");
@@ -157,10 +156,12 @@ public class CryptoService extends IntentService {
                 Signature privateSignature = Signature.getInstance("SHA256withRSA");
 
                 privateSignature.initSign(getPrivateKey("keyP"));
-                privateSignature.update(secretKey.getEncoded());
+                //privateSignature.update(secretKey.getEncoded());
 
-                FileOutputStream fileOutputStream = new FileOutputStream(default_folder.getCanonicalPath() + File.separator + destFile+"_HASH.sig");
-                fileOutputStream.write(encryptedText.toString().getBytes());
+                privateSignature.update(encryptedText.getBytes());
+
+                FileOutputStream fileOutputStream = new FileOutputStream(/*default_folder.getCanonicalPath() + File.separator +*/ destFile+"_HASH.sig");
+//                fileOutputStream.write(encryptedText.toString().getBytes());
 //                fileOutputStream.write('\n');
 //                fileOutputStream.write('\n');
                 //append signature to file

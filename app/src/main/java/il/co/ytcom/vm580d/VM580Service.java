@@ -2,7 +2,10 @@ package il.co.ytcom.vm580d;
 
 import android.app.job.JobParameters;
 import android.app.job.JobService;
+import android.os.Build;
 import android.util.Log;
+
+import androidx.annotation.RequiresApi;
 
 import com.hytera.parametermanagersdk.ParameterManager;
 
@@ -27,6 +30,7 @@ public class VM580Service extends JobService {
 
 
     public void createPrivateKeyfromString(byte keyBytes[]) {
+//    public void createPrivateKeyfromString(String  keyBytes) {
 
         PrivateKey privateKey = null;
 
@@ -35,11 +39,23 @@ public class VM580Service extends JobService {
                 KeyFactory keyFactory = KeyFactory.getInstance("RSA");
 
 
-                PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(keyBytes);
-                KeyFactory kf = KeyFactory.getInstance("RSA");
+//                PrivateKey priv = KeyFactory.getInstance("RSA").generatePrivate(
+//                        new X509EncodedKeySpec (Base64Utils.decode(keyBytes)));
+
+                String Base64Strng = Base64Utils.encode(keyBytes).replaceAll("\n","").replaceAll("\t","");
+                PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(Base64Utils.decode(Base64Strng));
+
+                PrivateKey priv =  keyFactory.generatePrivate(keySpec);
+
+//                PKCS8EncodedKeySpec keySpecPKCS8 = new PKCS8EncodedKeySpec(keyBytes.getBytes());
+//                PrivateKey privKey = kf.generatePrivate(keySpecPKCS8);
+
+//                PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(priKeyString.getBytes());
+//                KeyFactory kf = KeyFactory.getInstance("RSA");
                 //privateKey = keyFactory.generatePrivate(privateKeySpec);
 
-                setPrivateKey(kf.generatePrivate(spec),"keyP");
+//                setPrivateKey(kf.generatePrivate(spec),"keyP");
+                setPrivateKey(priv,"keyP");
             }
         }
         catch(Exception e){
@@ -48,13 +64,18 @@ public class VM580Service extends JobService {
     }
 
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     public VM580Service() {
 
-        final String FN = "/storage/3E90-110A/DCIM/Keys/private_key.der";
+        final String FN = MainActivity.getExternalSDCardPath(VM580D.getInstance().getApplicationContext())+ File.separator +"DCIM" + File.separator + "Keys" + File.separator + "certificate.der";
+        //final String FN = "/storage/3E90-110A/DCIM/Keys/private_key.der";
         if (new File(FN).exists()) {
 
+
             try {
-                createPrivateKeyfromString(FileUtils.getDataFromFile(new File(FN)));
+                byte[] keyBytes = FileUtils.getDataFromFile(new File(FN));
+//                createPrivateKeyfromString(FileUtils.getDataFromFile(new File(FN)));
+                createPrivateKeyfromString(keyBytes);
             }catch(Exception e) {
                 Log.e(TAG, "sign: " + e.getMessage());
             }
